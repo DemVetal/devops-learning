@@ -4,7 +4,7 @@
 
 ## Цель этого всего
 
-Подготовка к позиции JuniorDevOps / Linux Engineer:Linux, сети, Docker, CI/CD, IaC, мониторинг
+Подготовка к позиции Junior DevOps / Linux Engineer: Linux, сети, Docker, CI/CD, IaC, мониторинг
 
 ## Среда обучения
 - Windows 11 + WSL2, Ubuntu 24.04 LTS
