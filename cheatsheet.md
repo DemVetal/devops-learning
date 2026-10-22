@@ -79,6 +79,7 @@
 | `git config --global --list` | мои настройки Git |
 
 Цикл: изменил → `Ctrl+S` → `git status` → `git add .` → `git commit -m "..."` → `git push`
+`ahead of 'origin/main' by N commits` — есть локальные коммиты, которые ещё не на GitHub → нужен `git push`
 
 ## SSH
 | Команда | Что делает |
