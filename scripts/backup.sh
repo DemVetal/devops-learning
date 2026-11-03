@@ -35,6 +35,9 @@ for SRC in $SOURCES; do
     backup_dir "$SRC" || ERRORS=$((ERRORS + 1))
 done
 
+# Ротация: удаляем архивы старше 7 дней
+find "$BACKUP_DIR" -name "*.tar.gz" -type f -mtime +7 -print -delete
+
 echo "Готово. Ошибок: $ERRORS"
 
 if [ "$ERRORS" -gt 0 ]; then
