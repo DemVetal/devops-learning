@@ -54,6 +54,6 @@ echo "Отчёт сохранён: $REPORT_FILE"
 
 if [ -n "$SITE_500" ]; then
     exit 3
-    else
+else
     exit 0
 fi
