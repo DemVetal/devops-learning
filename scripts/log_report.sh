@@ -11,7 +11,7 @@ TARGET="${1:-}"
 # Проверяем путь
 if [ -z "$TARGET" ]; then
     echo "Ошибка: не указан путь"
-    echo "Использование: $0 <путь логу>"
+    echo "Использование: $0 <путь к логу>"
     exit 1
 fi
 
@@ -21,7 +21,7 @@ if [ ! -f "$TARGET" ]; then
     exit 2
 fi
 
-# Сохранение и вывод отчёта
+# Сбор данных
 DATE="$(date '+%F %T')"
 REQUEST="$(wc -l < "$TARGET")"
 TOP_IP="$(awk '{print $1}' "$TARGET" | sort | uniq -c | sort -nr | head -n 3)"
@@ -47,9 +47,13 @@ $SITE_500"
 
 mkdir -p "$REPORT_DIR"
 
+# Сохранение и вывод отчёта
+
 print_report | tee "$REPORT_FILE"
 echo "Отчёт сохранён: $REPORT_FILE"
 
-if [ -n "SITE_500" ]; then
+if [ -n "$SITE_500" ]; then
     exit 3
+    else
+    exit 0
 fi
