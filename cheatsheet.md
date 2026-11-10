@@ -535,3 +535,61 @@ name "аргумент"
 
 ### Главное правило проверок
 Испытать проверку на случае, когда она ОБЯЗАНА сработать (порог 1%). Сломанная проверка может молча говорить «всё OK».
+
+## systemd и службы
+- Служба (демон) — программа, работающая постоянно в фоне без терминала; управляет ими systemd (PID 1)
+- Юниты: `/usr/lib/systemd/system/` — от пакетов (не править), `/etc/systemd/system/` — свои
+- Свои программы — в `/usr/local/bin/`
+
+| Команда | Что делает |
+|---|---|
+| `systemctl status имя` | состояние службы + последние строки журнала |
+| `systemctl --failed` | упавшие службы (первая команда при проблемах) |
+| `systemctl list-units --type=service --state=running` | работающие службы |
+| `systemctl is-active [--quiet] имя` | работает ли (код: 0 — да, 3 — нет, 4 — нет такой службы) |
+| `systemctl is-enabled имя` | включён ли автозапуск |
+| `systemctl cat имя` | показать файл юнита |
+| `sudo systemctl start / stop / restart имя` | запустить / остановить / перезапустить |
+| `sudo systemctl reload имя` | перечитать конфиг без остановки (если есть ExecReload) |
+| `sudo systemctl enable / disable имя` | включить / выключить автозапуск |
+| `sudo systemctl enable --now имя` | автозапуск + запустить сразу |
+| `sudo systemctl daemon-reload` | перечитать файлы юнитов (ПОСЛЕ КАЖДОЙ ПРАВКИ ЮНИТА!) |
+| `journalctl -u имя` / `-f` | журнал службы / в реальном времени |
+
+- `active` — работает СЕЙЧАС; `enabled` — запустится ПРИ ЗАГРУЗКЕ (независимы!)
+- `enable` = символическая ссылка в `/etc/systemd/system/multi-user.target.wants/`
+- `stop` отправляет SIGTERM; осознанная остановка не перезапускается, авария (kill -9) — перезапускается при `Restart=on-failure`
+- После нескольких быстрых падений подряд systemd сдаётся: `Start request repeated too quickly` → failed
+- restart — с перерывом в работе; reload — без перерыва (для Nginx после правки конфига — reload)
+- Опасно останавливать: ssh, сеть, базы данных
+- Точка в status: ● зелёная — работает, ○ — остановлена, × красная — ошибка
+- Без daemon-reload служба работает по СТАРОЙ версии юнита → сломается при следующей загрузке
+- `status=203/EXEC` — systemd не смог запустить программу из ExecStart (нет файла / нет права x)
+- Из less выходить `q`, а не Ctrl+Z (иначе процесс на паузе, STAT = T)
+
+### Шаблон юнита
+```ini
+[Unit]
+Description=Описание службы
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/программа
+Restart=on-failure
+User=nobody
+
+[Install]
+WantedBy=multi-user.target
+```
+- `ExecStart` — команда запуска; `Restart=on-failure` — поднимать после аварии
+- `User=` — от кого работает (по умолчанию root!); `After=` — порядок запуска
+- `WantedBy=multi-user.target` — запускать при обычной загрузке
+- Вывод службы (echo) автоматически попадает в журнал
+
+### Порядок: своя служба
+1. Скрипт и юнит — в репозитории (источник правды — Git)
+2. `sudo cp` скрипт в `/usr/local/bin/`, `chmod 755`
+3. `sudo cp` юнит в `/etc/systemd/system/`
+4. `sudo systemctl daemon-reload`
+5. `sudo systemctl enable --now имя`
+6. `systemctl status имя`, `journalctl -u имя`

@@ -318,3 +318,36 @@
 ## f: unbound variable
 - Причина: опечатка в имени переменной; set -u сразу остановил скрипт
 - Вывод: защитный режим работает — ошибка видна сразу, а не молча
+
+## systemctl is-active crone → inactive, код 4
+- Причина: опечатка — такой службы нет (код 4), для остановленного cron был бы код 3
+- Вывод: текст одинаковый («inactive»), различает только код возврата
+
+## systemctl status висит в списке процессов со STAT = T
+- Причина: вышел из less через Ctrl+Z (пауза), а не q
+- Решение: jobs → kill %номер; выходить из less клавишей q
+
+## Failed to reload cron.service: Job type reload is not applicable
+- Причина: в юните нет ExecReload — служба не умеет reload
+- Решение: restart
+
+## kill -9 PID службы: Operation not permitted
+- Причина: процесс службы принадлежит nobody, а не мне (User=nobody)
+- Решение: sudo kill
+
+## Служба работает, хотя юнит сломан
+- Причина: правка юнита без daemon-reload — systemd использует старую версию
+- Опасность: служба упадёт при следующей перезагрузке
+- Решение: после ЛЮБОЙ правки юнита — sudo systemctl daemon-reload
+
+## heartbeat.service: failed, status=203/EXEC
+- Причина: опечатка в пути ExecStart (heartbeet.sh)
+- Признаки: × failed, restart counter is at 5, Start request repeated too quickly
+- Решение: исправить путь → daemon-reload → restart → status
+
+## ps -ef hearbeat: unsupported option
+- Причина: ps не ищет по имени
+- Решение: pgrep -a heartbeat или ps -ef | grep heartbeat
+
+## deamon-reload, is-enable, crone — опечатки
+- systemctl сам подсказывает правильную команду
