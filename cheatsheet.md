@@ -593,3 +593,38 @@ WantedBy=multi-user.target
 4. `sudo systemctl daemon-reload`
 5. `sudo systemctl enable --now имя`
 6. `systemctl status имя`, `journalctl -u имя`
+
+## Журнал: journalctl
+| Команда | Что показывает |
+|---|---|
+| `journalctl -u имя` | журнал одной службы |
+| `journalctl -n 20` / `-e` / `-r` | последние 20 / открыть в конце / новые сверху |
+| `journalctl -f` | в реальном времени |
+| `journalctl --since "10 min ago"` | за последние 10 минут |
+| `journalctl --since today` / `yesterday` | с начала дня |
+| `journalctl --since "2026-11-10 16:25" --until "2026-11-10 16:35"` | за промежуток |
+| `journalctl -p err` | ошибки и серьёзнее (`warning` — с предупреждениями) |
+| `journalctl -b` / `-b -1` | текущая / предыдущая загрузка |
+| `journalctl --list-boots` | список загрузок |
+| `journalctl -g "текст"` | поиск по тексту |
+| `journalctl -t метка` | записи с меткой (от logger) |
+| `journalctl -o short-iso` / `--utc` | время со смещением / в UTC |
+| `journalctl --disk-usage` | размер журнала |
+| `sudo journalctl --vacuum-size=200M` | удалить старое, оставить 200 МБ |
+| `sudo journalctl --vacuum-time=2weeks` | удалить старше двух недель |
+| `logger -t метка [-p user.err] "текст"` | своя запись в журнал |
+| `timedatectl` | время и часовой пояс системы |
+| `--no-pager` | вывести без less |
+
+- Уровни: 0–2 критические, 3 err, 4 warning, 5 notice, 6 info, 7 debug; `-p` показывает этот уровень и серьёзнее
+- `echo` службы — уровень info; `-p err` его не покажет
+- Порядок разбора: `-p err` → факт и время ошибки → весь журнал вокруг этого времени → причина
+- `-- Boot ... --` — граница между загрузками
+- `Started` = процесс запущен, НЕ значит «работает»; смотреть следующие строки
+- `Failed to start` — итог, а не каждая попытка
+- Опечатка в имени службы → пустой вывод без ошибки
+- Очистка журнала удаляет историю безвозвратно; предел — `SystemMaxUse=` в `/etc/systemd/journald.conf`
+- Чтение журнала без sudo — через группу adm
+- При разборе инцидента сначала выяснить часовой пояс каждого источника
+- В WSL постоянный «шум»: kernel dxg/PCI, pam_lastlog, getaddrinfo — безвредно
+- `DynamicUser=yes` — отдельный временный пользователь для службы (лучше, чем User=nobody)

@@ -351,3 +351,30 @@
 
 ## deamon-reload, is-enable, crone — опечатки
 - systemctl сам подсказывает правильную команду
+
+## Special user nobody configured, this is not safe!
+- Причина: User=nobody в юните; nobody могут делить несколько служб
+- Решение: DynamicUser=yes (или отдельный пользователь для службы)
+- Вывод: в status предупреждения не было, нашлось только в журнале
+
+## journalctl -u hearbeat -f — пусто и тишина
+- Причина: опечатка в имени службы; journalctl не сообщает, что службы нет
+- Вывод: пустой результат — сначала проверить имя
+
+## journalctl --since "2 min ago" heartbeat → Failed to add match
+- Причина: пропущен -u
+
+## Failed to parse timestamp: 166:35 / yersterday
+- Причина: опечатки во времени
+
+## journalctl: unrecognized option '--nopager'
+- Правильно: --no-pager
+
+## Неверный подсчёт неудачных запусков
+- Посчитал одну строку «Failed to start», а неудачных попыток было 5
+- Причина: Started = процесс запущен, а не служба работает; после каждой попытки шло 203/EXEC
+- Вывод: считать по строкам с причиной (grep -c "203/EXEC")
+
+## login[370] и login[377] посчитались как разные программы
+- Причина: PID входит в поле
+- Решение: убирать различия перед подсчётом
