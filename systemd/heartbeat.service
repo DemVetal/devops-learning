@@ -4,7 +4,7 @@ Description=Heartbeat demo service
 [Service]
 ExecStart=/usr/local/bin/heartbeat.sh
 Restart=on-failure
-User=nobody
+DynamicUser=yes
 
 [Install]
 WantedBy=multi-user.target
