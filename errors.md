@@ -403,3 +403,25 @@
 ## curl на 404 вернул код 0
 - Причина: для curl запрос выполнен; HTTP-ошибка — не ошибка curl
 - Решение: -w "%{http_code}" или -f
+
+## No MTA installed, discarding output
+- Причина: команда в cron вывела ошибку (здесь — check_site.sh: not found из-за короткого PATH), а почты нет — вывод выброшен
+- Решение: полные пути в crontab; результат — через logger или >> файл 2>&1
+
+## enable --now check-disk → «The unit files have no installation config»
+- Причина: служба таймера без [Install] — включать нужно таймер, а не службу
+
+## check-site.service: status=203/EXEC
+- Причина: вместо cp запустил скрипт (sudo script.sh /usr/local/bin/...), файл не скопировался
+- Признак в журнале: «Fail: /usr/local/bin/check_site.sh ответил 000» — путь передан как URL
+
+## Таймеры запущены, но disabled
+- Причина: start без enable — после перезагрузки не запустятся
+- Решение: sudo systemctl enable --now имя.timer; проверка — systemctl is-enabled
+
+## [Install] в backup.service вместо Persistent в таймере
+- WantedBy=multi-user.target в службе = запускать бэкап при каждой загрузке (если включить)
+- От пропуска защищает Persistent=true в [Timer]
+
+## journalctl --since "10 min ago<Enter>" → Failed to parse timestamp
+- Причина: кавычка закрыта на следующей строке — в значение попал перевод строки
