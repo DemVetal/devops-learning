@@ -3,7 +3,6 @@ Description=Check site usage every minutes
 
 [Timer]
 OnCalendar=*:0/1
-Persistent=true
 
 [Install]
 WantedBy=timers.target

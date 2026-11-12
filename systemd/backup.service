@@ -1,10 +1,7 @@
 [Unit]
-Description=Backup "$HOME/sandbox/server $HOME/sandbox/streams"
+Description=Daily backup of sandbox folders
 
 [Service]
 Type=oneshot
 ExecStart=/usr/local/bin/backup.sh
 User=vetal
-
-[Install]
-WantedBy=multi-user.target
