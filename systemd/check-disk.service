@@ -1,0 +1,7 @@
+[Unit]
+Description=Check disk usage
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/check_disk.sh 90
+DynamicUser=yes
