@@ -1,0 +1,7 @@
+[Unit]
+Description=Check site
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/check_site.sh
+DynamicUser=yes

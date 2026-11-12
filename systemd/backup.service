@@ -1,0 +1,10 @@
+[Unit]
+Description=Backup "$HOME/sandbox/server $HOME/sandbox/streams"
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/backup.sh
+User=vetal
+
+[Install]
+WantedBy=multi-user.target
