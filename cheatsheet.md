@@ -757,3 +757,73 @@ WantedBy=timers.target
 
 - Точность мониторинга = интервал проверки (раз в минуту → ±1 минута)
 - `|| true` после команды в скрипте с set -e — чтобы ожидаемая ошибка не остановила скрипт
+
+## Nginx
+| Путь | Что там |
+|---|---|
+| `/etc/nginx/nginx.conf` | главный конфиг |
+| `/etc/nginx/sites-available/` | конфиги всех сайтов |
+| `/etc/nginx/sites-enabled/` | ссылки на включённые сайты |
+| `/var/www/имя/` | файлы сайта |
+| `/var/log/nginx/access.log`, `error.log` | общие журналы |
+
+| Команда | Что делает |
+|---|---|
+| `sudo nginx -t` | проверить конфиг (синтаксис) |
+| `sudo nginx -t && sudo systemctl reload nginx` | ПРАВИЛЬНЫЙ способ применить конфиг |
+| `sudo nginx -T` | весь загруженный конфиг |
+| `sudo ln -s /etc/nginx/sites-available/имя /etc/nginx/sites-enabled/имя` | включить сайт |
+| `sudo rm /etc/nginx/sites-enabled/имя` | выключить сайт (конфиг остаётся) |
+| `grep -v '^\s*#' файл \| grep -v '^\s*$'` | конфиг без комментариев и пустых строк |
+| `diff файл1 файл2` | различия между файлами (пусто = одинаковые) |
+
+- Процессы: master от root (открывает порт 80, читает конфиг), workers от www-data (обслуживают); workers = число ядер
+- reload: master перечитывает конфиг, запускает новых workers, старые дорабатывают запросы — без обрыва
+- reload с ошибкой в конфиге — отказ, сайт работает по-старому; restart с ошибкой — ВСЕ сайты падают
+- nginx -t проверяет синтаксис, но не существование файлов и сокетов
+- Перед запуском systemd выполняет nginx -t (ExecStartPre)
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name mysite.test;
+    root /var/www/mysite;              # ПАПКА сайта
+    index index.php index.html;        # что отдать при запросе папки
+
+    access_log /var/log/nginx/mysite.access.log;
+    error_log  /var/log/nginx/mysite.error.log;
+
+    location / {
+        try_files $uri $uri/ =404;     # файл → папка → 404
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+    }
+}
+```
+- Каждая директива заканчивается `;`
+- Выбор сайта: сначала по адресу и порту (`listen`), потом Host ↔ `server_name`; иначе `default_server`
+- Слушать и IPv4, и IPv6: `listen 80;` + `listen [::]:80;`
+- Проверка без DNS: `curl -H "Host: имя" http://127.0.0.1` или запись в `/etc/hosts` (через `sudo tee -a`, с бэкапом)
+- Порядок: конфиг в репозитории → cp → ln -s → nginx -t → reload → curl
+
+## PHP-FPM
+- Служба `php8.3-fpm`: master от root, пул `www` от www-data — они выполняют PHP
+- Связь с Nginx через Unix-сокет `/run/php/php8.3-fpm.sock` (тип `s`, права 660, www-data)
+- Сокеты-файлы: `sudo ss -xlp | grep php` (в `ss -tlnp` их нет)
+- Журнал: `/var/log/php8.3-fpm.log` — события службы, не запросы
+
+## Коды ответа и где искать
+| Код | Значение | Где искать |
+|---|---|---|
+| 200 | OK | — |
+| 403 | доступ запрещён | права на файлы и ПАПКИ (x для www-data); error.log: `Permission denied` |
+| 404 | не найдено | путь, root; не пишется в error.log |
+| 502 | шлюз не ответил | upstream (PHP-FPM): работает ли служба? верный ли путь к сокету? error.log: `connect() ... failed` |
+
+- Статичная страница работает, а .php — 502 → проблема в PHP-FPM, а не в Nginx
+- Нет блока для .php → исходный код отдаётся текстом (утечка паролей!)
+- Не оставлять на сайте info.php / phpinfo

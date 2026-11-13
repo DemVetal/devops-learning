@@ -425,3 +425,40 @@
 
 ## journalctl --since "10 min ago<Enter>" → Failed to parse timestamp
 - Причина: кавычка закрыта на следующей строке — в значение попал перевод строки
+
+## curl -H "Host: mysite.test" http://localhost показывает страницу default
+- Причина: mysite слушал только IPv4 (listen 80), а curl подключался к localhost по IPv6 (::1); на IPv6 слушал только default
+- Проверка: curl -H "Host: mysite.test" http://127.0.0.1 — по IPv4 сайт отвечал
+- Решение: добавить listen [::]:80; → nginx -t → reload
+- Вывод: Host сравнивается с server_name только среди сайтов на том же адресе и порту
+
+## Сайт по имени отдаёт страницу default
+- Причина: сайт слушал только IPv4, curl подключался к localhost по IPv6
+- Решение: listen [::]:80; — Host сравнивается только среди сайтов на том же адресе и порту
+
+## 502 Bad Gateway: connect() to unix:/run/php/php8.3-fpm.sock failed (2: No such file or directory)
+- Причина: PHP-FPM остановлен — сокет удалён
+- Признак: .html отдаётся (200), .php — 502
+- Решение: sudo systemctl start php8.3-fpm
+
+## 502 при успешном nginx -t
+- Причина: в fastcgi_pass неверный путь к сокету (php8.2 вместо php8.3)
+- Вывод: nginx -t проверяет синтаксис, а не существование файлов
+
+## 403 Forbidden: "/var/www/mysite/index.php" is forbidden (13: Permission denied)
+- Причина: chmod 700 на папку сайта — www-data не может в неё войти (нет x)
+- Решение: chmod 755
+
+## invalid number of arguments in "root" directive in .../mysite:6
+- Причина: пропущена ; в конце строки
+- reload: отказался применять — сайт работал по-старому
+- restart: Nginx не запустился — упали ВСЕ сайты
+- Решение: исправить → nginx -t → start; всегда nginx -t && reload
+
+## nginx.service is not active, cannot reload
+- Причина: Nginx остановлен — reload невозможен
+- Решение: start
+
+## .php отдаётся исходным кодом
+- Причина: нет блока location ~ \.php$ — файл отдан как текст
+- Опасность: утечка паролей из конфигов
