@@ -462,3 +462,28 @@
 ## .php отдаётся исходным кодом
 - Причина: нет блока location ~ \.php$ — файл отдан как текст
 - Опасность: утечка паролей из конфигов
+
+## ssh-add -l: Could not open a connection to your authentication agent
+- Причина: агент не запущен, SSH_AUTH_SOCK пустая
+- Решение: eval "$(ssh-agent -s)" или keychain в ~/.bashrc
+
+## Новая вкладка не видит агента
+- Причина: переменные окружения не передаются в другие вкладки (не дочерние процессы); export не поможет
+- Решение: keychain — общий агент через файл
+
+## Authentication refused: bad ownership or modes for directory /home/vetal/.ssh
+- Причина: chmod 777 на ~/.ssh — сервер не доверяет ключам
+- Решение: chmod 700 ~/.ssh
+- Опасность: при отключённых паролях — полная потеря доступа
+
+## ufw: command not found
+- Причина: в образе Ubuntu для WSL ufw не установлен
+- Решение: sudo apt install ufw
+
+## curl: (28) Connection timed out (webdemo работает)
+- Причина: порт закрыт файрволом
+- Отличие от refused: refused — мгновенно, никто не слушает; timed out — нет ответа, файрвол
+
+## ufw delete 5 6 — удалилось только одно правило
+- Причина: ufw delete удаляет одно правило за раз
+- Решение: ufw delete allow 8080/tcp (удалит v4 и v6) или по номерам с большего к меньшему
